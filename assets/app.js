@@ -254,8 +254,17 @@
       startFollowup();
     }).catch(function (err) {
       console.error(err);
-      setStatus("오류: " + (err && err.message ? err.message : err), "warn");
+      failActiveStep();
+      if (err && err.daily) {
+        setStatus("오늘 무료 사용량(하루 한도)을 모두 사용했습니다. ‘데모 보기 (예시)’로 확인하거나, 새 프로젝트 키 / 결제 연결 후 다시 시도하세요.", "warn");
+      } else {
+        setStatus("오류: " + (err && err.message ? err.message : err), "warn");
+      }
     }).finally(function () { setBusy(false); });
+  }
+  function failActiveStep() {
+    var a = el.steps.querySelector(".step.active");
+    if (a) { a.className = "step fail"; a.querySelector(".step-ico").textContent = "✗"; }
   }
 
   /* ============ 대시보드 렌더 ============ */
@@ -558,10 +567,16 @@
     }).then(function (resp) {
       if (!resp.ok) {
         var msg = (resp.data && resp.data.error && resp.data.error.message) || ("HTTP " + resp.status);
-        if (resp.status === 429 && attempt < MAX_RETRY) {
-          var sec = parseRetryDelay(resp.data);
-          setStatus("무료 사용량(분당) 한도 도달 — " + sec + "초 후 자동 재시도합니다… (" + (attempt + 1) + "/" + MAX_RETRY + ")", "warn");
-          return wait(sec * 1000).then(function () { return geminiCall(opts, attempt + 1); });
+        if (resp.status === 429) {
+          if (isDailyQuota(resp.data)) {
+            var de = new Error("오늘 무료 사용량(하루 한도)을 모두 사용했습니다.");
+            de.daily = true; throw de;   // 하루 한도는 재시도해도 안 풀림 → 즉시 종료
+          }
+          if (attempt < MAX_RETRY) {
+            var sec = parseRetryDelay(resp.data);
+            setStatus("무료 사용량(분당) 한도 도달 — " + sec + "초 후 자동 재시도합니다… (" + (attempt + 1) + "/" + MAX_RETRY + ")", "warn");
+            return wait(sec * 1000).then(function () { return geminiCall(opts, attempt + 1); });
+          }
         }
         throw new Error(msg);
       }
@@ -570,6 +585,18 @@
       var parts = (cand.content && cand.content.parts) || [];
       return { text: parts.map(function (p) { return p.text || ""; }).join("").trim(), sources: extractSources(cand) };
     });
+  }
+  function isDailyQuota(data) {
+    try {
+      var det = (data && data.error && data.error.details) || [];
+      for (var i = 0; i < det.length; i++) {
+        var vs = det[i].violations || [];
+        for (var j = 0; j < vs.length; j++) {
+          if (/PerDay/i.test(vs[j].quotaId || "")) return true;
+        }
+      }
+    } catch (e) {}
+    return false;
   }
   function parseRetryDelay(data) {
     try {
