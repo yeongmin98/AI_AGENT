@@ -1,0 +1,11 @@
+.claude/
+
+# 로컬 API 키 (실수로 커밋 방지) — 배포는 GitHub Actions Secret으로 주입
+config.js
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+
+# 제출용 개인정보 파일은 공개 배포 레포에 올리지 말 것 (필요 시 주석 해제)
+# AI에이전트 사전과제_제출양식.docx

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hynix Brief News — SK하이닉스 엔지니어 일일 반도체 뉴스 브리핑</title>
+  <meta name="description" content="SK하이닉스 엔지니어를 위한 일일 반도체 뉴스 브리핑 AI Agent. 최근 48시간 뉴스를 자동 수집·분석합니다." />
+  <link rel="stylesheet" href="assets/style.css" />
+  <!-- 마크다운 렌더 + 살균 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <span class="logo">HBN</span>
+        <div class="brand-text">
+          <h1>Hynix Brief News</h1>
+          <p>SK하이닉스 엔지니어 일일 반도체 뉴스 브리핑</p>
+        </div>
+      </div>
+      <span class="badge">AI Agent · Gemini</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <p class="lead">
+        실행 즉시 <strong>최근 48시간 이내</strong> SK하이닉스·삼성전자·마이크론·경쟁사·산업 트렌드 뉴스를
+        자동 수집하고, 엔지니어 관점(공정·수율·품질·제품·패키징·공급망)으로 분석해 고정 형식의 브리핑을 생성합니다.
+      </p>
+
+      <div id="key-row" class="key-row" style="display:none">
+        <label for="key-input">Gemini API 키</label>
+        <input id="key-input" type="password" placeholder="AIza... (이 브라우저에만 저장)" autocomplete="off" />
+        <button id="btn-key-save" class="btn btn-ghost" type="button">키 저장</button>
+        <a class="hint-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">키 발급</a>
+      </div>
+
+      <div class="actions">
+        <button id="btn-generate" class="btn btn-primary" type="button">브리핑 생성</button>
+        <button id="btn-demo" class="btn btn-ghost" type="button">데모 보기</button>
+        <span class="spacer"></span>
+        <button id="btn-copy" class="btn btn-ghost" type="button" style="display:none">마크다운 복사</button>
+        <button id="btn-download" class="btn btn-ghost" type="button" style="display:none">다운로드(.md)</button>
+      </div>
+
+      <p id="status" class="status">초기화 중…</p>
+    </section>
+
+    <section class="output">
+      <div id="report" class="report"></div>
+      <div id="sources" class="sources"></div>
+      <p id="run-meta" class="run-meta"></p>
+    </section>
+  </main>
+
+  <footer class="foot wrap">
+    <p>Hynix Brief News · 본 브리핑은 자동 수집·요약 결과이며 투자 판단의 근거가 아닙니다. 원문 출처를 반드시 확인하세요.</p>
+  </footer>
+
+  <!-- 설정(선택): 배포 시 GEMINI_API_KEY 주입. 없으면 입력창/데모로 동작 -->
+  <script src="config.js" onerror="this.remove()"></script>
+  <script src="assets/prompt.js"></script>
+  <script src="assets/demo.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
