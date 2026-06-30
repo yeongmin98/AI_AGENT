@@ -40,7 +40,6 @@
 
       <div class="actions">
         <button id="btn-generate" class="btn btn-primary" type="button">브리핑 생성</button>
-        <button id="btn-demo" class="btn btn-ghost" type="button">데모 보기</button>
         <span class="spacer"></span>
         <button id="btn-copy" class="btn btn-ghost" type="button" style="display:none">마크다운 복사</button>
         <button id="btn-download" class="btn btn-ghost" type="button" style="display:none">다운로드(.md)</button>
@@ -60,10 +59,9 @@
     <p>Hynix Brief News · 본 브리핑은 자동 수집·요약 결과이며 투자 판단의 근거가 아닙니다. 원문 출처를 반드시 확인하세요.</p>
   </footer>
 
-  <!-- 설정(선택): 배포 시 GEMINI_API_KEY 주입. 없으면 입력창/데모로 동작 -->
+  <!-- 설정(선택): 배포 시 GEMINI_API_KEY 주입. 없으면 키 입력창 노출 -->
   <script src="config.js" onerror="this.remove()"></script>
   <script src="assets/prompt.js"></script>
-  <script src="assets/demo.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

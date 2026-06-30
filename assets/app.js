@@ -1,7 +1,7 @@
 /* Hynix Brief News — 클라이언트 로직
  * - Gemini API(google_search 그라운딩)로 최근 48시간 뉴스 수집·분석·고정 템플릿 생성
  * - API 키 우선순위: window.HYNIX_CONFIG.GEMINI_API_KEY (config.js / Actions 주입) → 입력창(localStorage)
- * - 키 없을 때 / "데모 보기" 클릭 시 demo.js 의 예시 브리핑 렌더
+ * - 키 없을 때는 키 입력창을 노출(localStorage 저장)
  */
 (function () {
   "use strict";
@@ -15,7 +15,6 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     el.generate = $("btn-generate");
-    el.demo = $("btn-demo");
     el.copy = $("btn-copy");
     el.download = $("btn-download");
     el.keyRow = $("key-row");
@@ -27,7 +26,6 @@
     el.meta = $("run-meta");
 
     el.generate.addEventListener("click", onGenerate);
-    el.demo.addEventListener("click", onDemo);
     el.copy.addEventListener("click", copyReport);
     el.download.addEventListener("click", downloadReport);
     if (el.keySave) el.keySave.addEventListener("click", saveKey);
@@ -53,7 +51,7 @@
       if (el.keyRow) el.keyRow.style.display = "";
       var saved = localStorage.getItem(LS_KEY);
       if (saved && el.keyInput) el.keyInput.value = saved;
-      setStatus("API 키가 설정되지 않았습니다. 키를 입력하거나 ‘데모 보기’로 예시를 확인하세요.", "warn");
+      setStatus("API 키가 설정되지 않았습니다. 키를 입력한 뒤 ‘브리핑 생성’을 누르세요.", "warn");
     }
   }
   function saveKey() {
@@ -67,7 +65,7 @@
   function onGenerate() {
     var key = activeKey();
     if (!key) {
-      setStatus("API 키가 없습니다. 키를 입력하거나 ‘데모 보기’를 사용하세요.", "warn");
+      setStatus("API 키가 없습니다. 키를 입력한 뒤 다시 시도하세요.", "warn");
       return;
     }
     setBusy(true);
@@ -89,14 +87,6 @@
         setStatus("오류: " + (err && err.message ? err.message : err), "warn");
       })
       .finally(function () { setBusy(false); });
-  }
-
-  function onDemo() {
-    renderMarkdown(window.HYNIX_DEMO_MARKDOWN);
-    el.sources.innerHTML = "";
-    el.meta.textContent = "데모 모드 · 예시 데이터 (실제 뉴스 아님)";
-    setStatus("데모 브리핑을 표시했습니다. 실제 수집은 ‘브리핑 생성’을 사용하세요.", "");
-    showActions(true);
   }
 
   // ---- Gemini 호출 ----
@@ -196,7 +186,6 @@
   // ---- 유틸 ----
   function setBusy(b) {
     el.generate.disabled = b;
-    el.demo.disabled = b;
     el.generate.textContent = b ? "생성 중…" : "브리핑 생성";
   }
   function showActions(on) {

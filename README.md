@@ -12,7 +12,6 @@ SK하이닉스 엔지니어를 위한 **일일 반도체 뉴스 브리핑 AI Age
 index.html            # 단일 페이지 UI
 assets/prompt.js      # 시스템 프롬프트(일관성 규칙 + 고정 출력 템플릿)
 assets/app.js         # Gemini 호출 + 렌더 + 복사/다운로드
-assets/demo.js        # 키 없이 보여줄 예시 브리핑
 assets/style.css      # 스타일
 config.sample.js      # 키 설정 템플릿 (config.js 는 gitignore)
 .github/workflows/deploy.yml  # Pages 배포 + 키 주입
@@ -21,7 +20,7 @@ config.sample.js      # 키 설정 템플릿 (config.js 는 gitignore)
 ## 로컬 실행
 ```sh
 python3 -m http.server 8000
-# http://localhost:8000 접속 → "데모 보기" 또는 키 입력 후 "브리핑 생성"
+# http://localhost:8000 접속 → 키 입력 후 "브리핑 생성"
 ```
 
 ## 배포 (GitHub Pages, 권장: Actions + Secret)
@@ -39,5 +38,5 @@ python3 -m http.server 8000
 ### 개인정보 주의
 제출 양식(`*.docx`)·이미지에는 이름/이메일이 포함된다. `deploy.yml` 은 **웹앱 파일만** 배포하므로 공개 사이트엔 노출되지 않는다. 단, 브랜치 루트에서 직접 Pages를 켜는 방식은 사용하지 말 것.
 
-## 키 없이 동작
-`config.js`/Secret이 없으면 화면에 키 입력창이 뜨고, **"데모 보기"** 로 예시 브리핑을 즉시 확인할 수 있다.
+## 키 없이 접속 시
+`config.js`/Secret이 없으면 화면에 키 입력창이 뜬다. 키 입력 후 "브리핑 생성"으로 동작한다.
