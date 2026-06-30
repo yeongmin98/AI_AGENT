@@ -520,6 +520,12 @@
             return wait(sec * 1000).then(function () { return geminiCall(opts, attempt + 1); });
           }
         }
+        // 503/500: 모델 일시 혼잡(서버측) → 백오프 후 자동 재시도
+        if ((resp.status === 503 || resp.status === 500) && attempt < MAX_RETRY) {
+          var sec3 = (attempt + 1) * 5;
+          setStatus("모델이 일시적으로 혼잡합니다 — " + sec3 + "초 후 자동 재시도합니다… (" + (attempt + 1) + "/" + MAX_RETRY + ")", "warn");
+          return wait(sec3 * 1000).then(function () { return geminiCall(opts, attempt + 1); });
+        }
         throw new Error(msg);
       }
       var cand = resp.data && resp.data.candidates && resp.data.candidates[0];
