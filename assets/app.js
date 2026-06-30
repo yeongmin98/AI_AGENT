@@ -168,18 +168,24 @@
       return geminiCall({
         system: synthJSONInstruction(),
         contents: [{ role: "user", parts: [{ text: synthUser }] }],
-        useSearch: false, maxTokens: 16384, json: true
+        useSearch: false, maxTokens: 16384, json: true, noThink: true
       }).then(function (res) {
         var data = tryParseJSON(res.text);
         if (data) {
           lastBriefing = jsonToMarkdown(data);
-          renderDashboard(data);
+          try {
+            renderDashboard(data);
+          } catch (e) {
+            console.error("renderDashboard 실패 → 마크다운 폴백", e);
+            renderMarkdown(el.report, lastBriefing);
+            el.report.className = "report";
+          }
         } else {
           // 폴백: 마크다운으로 다시 종합
           return geminiCall({
             system: window.HYNIX_SYSTEM_PROMPT,
             contents: [{ role: "user", parts: [{ text: synthUser + "\n\n보고서 마크다운 본문만 출력하라." }] }],
-            useSearch: false, maxTokens: 16384
+            useSearch: false, maxTokens: 16384, noThink: true
           }).then(function (r2) {
             lastBriefing = stripFence(r2.text);
             renderMarkdown(el.report, lastBriefing);
@@ -197,7 +203,7 @@
       console.error(err);
       failActiveStep();
       if (err && err.daily) {
-        setStatus("오늘 무료 사용량(하루 한도)을 모두 사용했습니다. ‘데모 보기 (예시)’로 확인하거나, 새 프로젝트 키 / 결제 연결 후 다시 시도하세요.", "warn");
+        setStatus("오늘 무료 사용량(하루 한도)을 모두 사용했습니다. 새 프로젝트 키 발급 또는 결제 연결 후 다시 시도하세요.", "warn");
       } else {
         setStatus("오류: " + (err && err.message ? err.message : err), "warn");
       }
@@ -500,6 +506,7 @@
     if (opts.useSearch) body.tools = [{ google_search: {} }];
     body.generationConfig = { temperature: 0.3, maxOutputTokens: opts.maxTokens || 8192 };
     if (opts.json) body.generationConfig.responseMimeType = "application/json";
+    if (opts.noThink) body.generationConfig.thinkingConfig = { thinkingBudget: 0 }; // 출력 잘림 방지
     var url = ENDPOINT + encodeURIComponent(MODEL) + ":generateContent?key=" + encodeURIComponent(key);
 
     return fetch(url, {
