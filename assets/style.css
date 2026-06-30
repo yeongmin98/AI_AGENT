@@ -176,6 +176,7 @@ body {
 .badge-impact.lv-mid  { color: #ffc35a; background: rgba(255,180,84,.12); border-color: rgba(255,180,84,.35); }
 .badge-impact.lv-low  { color: #58e0b0; background: rgba(70,211,154,.12); border-color: rgba(70,211,154,.35); }
 .badge-impact.lv-none { color: var(--muted); background: rgba(255,255,255,.05); border-color: var(--line); }
+.badge-impact .badge-k { opacity: .7; font-weight: 600; font-size: 10.5px; }
 
 .empty-note { color: var(--muted); font-size: 13px; background: #0e1526; border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; }
 

@@ -21,8 +21,6 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     el.generate = $("btn-generate");
-    el.copy = $("btn-copy");
-    el.download = $("btn-download");
     el.keyRow = $("key-row");
     el.keyInput = $("key-input");
     el.keySave = $("btn-key-save");
@@ -37,11 +35,7 @@
     el.chatInput = $("chat-input");
     el.chatSend = $("btn-chat-send");
 
-    el.demo = $("btn-demo");
     el.generate.addEventListener("click", runAgent);
-    if (el.demo) el.demo.addEventListener("click", onDemo);
-    el.copy.addEventListener("click", copyReport);
-    el.download.addEventListener("click", downloadReport);
     if (el.keySave) el.keySave.addEventListener("click", saveKey);
     el.chatSend.addEventListener("click", function () { sendChat(el.chatInput.value); });
     el.chatInput.addEventListener("keydown", function (e) {
@@ -124,58 +118,6 @@
       "주가 데이터가 없으면 stock.price 에 '현재 사용 가능한 정보에서 최신 주가 데이터를 확인할 수 없습니다.' 를 넣는다.";
   }
 
-  /* ============ 데모 (예시 데이터, quota 미사용) ============ */
-  var DEMO_DATA = {
-    meta: { date: "2026년 06월 30일", time: "09:00" },
-    executive_summary: [
-      { issue: "HBM4 샘플 공급 일정 가속", summary: "SK하이닉스가 차세대 HBM4 고객 샘플 공급 일정을 앞당겼다는 보도.", engineer_meaning: "TSV 적층·열관리 공정 안정화와 후공정 수율 확보가 핵심 변수.", impact: "높음" },
-      { issue: "서버 DRAM 고정거래가 상승", summary: "서버 DRAM 가격이 2개월 연속 상승세.", engineer_meaning: "가동률·제품 믹스 조정으로 수익성 개선 기회.", impact: "중간" },
-      { issue: "AI 데이터센터 투자 확대", summary: "주요 클라우드 사업자 CAPEX 상향 전망.", engineer_meaning: "HBM·고용량 모듈 수요 견인, 고객사 수요 예측에 반영.", impact: "낮음" }
-    ],
-    hynix_news: [
-      { title: "SK하이닉스, HBM4 샘플 공급 가속", source: "(예시) 전자신문", published_at: "2026-06-29 14:20", url: "https://example.com/1", core: "12단 적층 기반 HBM4 고객 샘플 공급 일정을 앞당기며 AI 가속기 시장 주도권 강화에 나섰다.", insight: "TSV 적층 정밀도·열관리 설계가 수율을 좌우하며 후공정 검증 부하 증가.", keywords: "HBM4, TSV, 패키징", impact: "높음" },
-      { title: "1c nm DRAM 전환 투자 확대", source: "(예시) 매일경제", published_at: "2026-06-29 09:05", url: "https://example.com/2", core: "1c nm급 DRAM 공정 전환 투자를 확대하고 수율 안정화에 집중한다는 방침.", insight: "미세화로 공정 난이도 상승, 결함 저감·계측 강화와 램프업 속도가 관건.", keywords: "DRAM, 1c nm, 수율", impact: "중간" }
-    ],
-    stock: { price: "(예시) 198,000원", change: "+2.4%", cause: "HBM 수요 기대와 외국인 순매수 유입", news_summary: "HBM4 일정 가시화 보도가 투자심리에 긍정적", market_reaction: "일부 증권사 목표주가 상향, 매수 유지", engineer_point: "HBM 수요 강세는 후공정 CAPEX·수율 목표 상향으로 연결", source: "(예시) 한국경제", published_at: "2026-06-30 08:10", url: "https://example.com/3" },
-    competitors: [
-      { company: "삼성전자", core: "HBM 신제품의 주요 고객 인증 절차가 진행 중이라는 보도.", impact_on_hynix: "HBM 고객 인증 경쟁 심화는 품질·신뢰성 기준 상향 압력.", keywords: "HBM, 고객 인증", impact: "중간", source: "(예시) ZDNet", published_at: "2026-06-29 17:40", url: "https://example.com/4" },
-      { company: "마이크론", core: "분기 실적에서 데이터센터 메모리 수요 강세를 강조.", impact_on_hynix: "HBM 3사 경쟁에서 공급 확대 시 가격·점유율 경쟁 가속.", keywords: "HBM, AI 메모리", impact: "중간", source: "(예시) Reuters", published_at: "2026-06-28 23:15", url: "https://example.com/5" }
-    ],
-    trends: [
-      { related_companies: "엔비디아, TSMC", core: "AI 가속기 수요 전망과 함께 첨단 패키징(CoWoS) 증설 계획 보도.", impact_on_hynix: "AI 가속기 수요는 HBM 탑재량 증가로 직결, 후공정 캐파 수요 견인.", engineer_point: "패키징 캐파·수율, 열관리 설계 점검", impact: "높음", source: "(예시) Bloomberg", published_at: "2026-06-29 06:50", url: "https://example.com/6" }
-    ],
-    risks: [
-      { risk: "HBM 경쟁 심화에 따른 품질 기준 상향", related: "삼성 HBM 고객 인증", checkpoint: "신뢰성·번인 조건, 불량 모드 사전 점검" },
-      { risk: "미세화에 따른 초기 수율 부담", related: "1c nm DRAM 투자", checkpoint: "결함 저감, 계측 강화, 램프업 속도" }
-    ],
-    opportunities: [
-      { opportunity: "HBM 수요 구조적 증가", related: "AI 서버 투자 확대", point: "후공정 캐파·수율 목표 상향 대응" },
-      { opportunity: "서버 DRAM 가격 상승", related: "DRAM 고정거래가", point: "제품 믹스 최적화로 수익성 개선" }
-    ],
-    action_items: [
-      { action: "HBM4 적층·열관리 공정 동향 및 사내 적용 포인트 확인", related: "HBM4 일정 가시화", priority: "높음" },
-      { action: "1c nm 전환 관련 수율 램프업 사례 학습", related: "DRAM 미세화 투자", priority: "중간" },
-      { action: "AI 가속기 수요 전망과 HBM 탑재량 추이 점검", related: "AI 서버 투자", priority: "중간" }
-    ],
-    references: [
-      { category: "SK하이닉스", title: "SK하이닉스, HBM4 샘플 공급 일정 가속", source: "(예시) 전자신문", published_at: "2026-06-29 14:20", url: "https://example.com/1" },
-      { category: "주가", title: "SK하이닉스 주가, HBM 기대에 강세", source: "(예시) 한국경제", published_at: "2026-06-30 08:10", url: "https://example.com/3" },
-      { category: "삼성전자", title: "삼성, HBM 신제품 고객 인증 진행", source: "(예시) ZDNet", published_at: "2026-06-29 17:40", url: "https://example.com/4" },
-      { category: "마이크론", title: "마이크론, 데이터센터 메모리 수요 강세", source: "(예시) Reuters", published_at: "2026-06-28 23:15", url: "https://example.com/5" },
-      { category: "기타 경쟁사", title: "엔비디아·TSMC, AI 가속기·패키징 증설", source: "(예시) Bloomberg", published_at: "2026-06-29 06:50", url: "https://example.com/6" }
-    ]
-  };
-  function onDemo() {
-    el.steps.style.display = "none";
-    el.followup.style.display = "none";
-    lastBriefing = jsonToMarkdown(DEMO_DATA);
-    renderDashboard(DEMO_DATA);
-    el.sources.innerHTML = "";
-    el.meta.textContent = "데모 · 예시 데이터 (실제 뉴스 아님) · 실제 수집은 ‘브리핑 생성’";
-    setStatus("데모 브리핑(예시)을 표시했습니다. UI 확인용이며 실제 검색은 ‘브리핑 생성’을 사용하세요.", "");
-    showActions(true);
-  }
-
   function runAgent() {
     var key = activeKey();
     if (!key) { setStatus("API 키가 없습니다. 키를 입력한 뒤 다시 시도하세요.", "warn"); return; }
@@ -250,7 +192,6 @@
       setStep("verify", "done");
       el.meta.textContent = "생성: " + nowStr + " · 모델: " + MODEL + " · 5단계 에이전트 파이프라인";
       setStatus("브리핑 생성 완료. 아래에서 이어서 질문하거나 더 파고들 수 있습니다.", "ok");
-      showActions(true);
       startFollowup();
     }).catch(function (err) {
       console.error(err);
@@ -345,7 +286,8 @@
     level = (level || "").trim();
     var cls = level === "높음" ? "lv-high" : level === "중간" ? "lv-mid" : level === "낮음" ? "lv-low" : "lv-none";
     var dot = level === "높음" ? "🔴" : level === "중간" ? "🟡" : level === "낮음" ? "🟢" : "";
-    return '<span class="badge-impact ' + cls + '">' + dot + " " + esc(level || "—") + "</span>";
+    return '<span class="badge-impact ' + cls + '" title="엔지니어 관점 중요도">' +
+      dot + ' <span class="badge-k">중요도</span> ' + esc(level || "—") + "</span>";
   }
   function srcLine(source, date, url) {
     var parts = [];
@@ -658,21 +600,6 @@
     li.querySelector(".step-ico").textContent =
       state === "done" ? "✓" : state === "fail" ? "✗" : state === "active" ? "⟳" : "•";
   }
-  function copyReport() {
-    if (!lastBriefing) return;
-    navigator.clipboard.writeText(lastBriefing).then(
-      function () { setStatus("마크다운을 클립보드에 복사했습니다.", "ok"); },
-      function () { setStatus("복사 실패. 브라우저 권한을 확인하세요.", "warn"); });
-  }
-  function downloadReport() {
-    if (!lastBriefing) return;
-    var name = "hynix-brief-news_" + fmt(new Date()).replace(/[: ]/g, "-") + ".md";
-    var blob = new Blob([lastBriefing], { type: "text/markdown;charset=utf-8" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = name;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-  }
   function resetOutput() {
     el.report.innerHTML = ""; el.report.className = "report";
     el.sources.innerHTML = ""; el.meta.textContent = "";
@@ -681,10 +608,6 @@
   function setBusy(b) {
     el.generate.disabled = b;
     el.generate.textContent = b ? "에이전트 작업 중…" : "브리핑 생성";
-  }
-  function showActions(on) {
-    el.copy.style.display = on ? "" : "none";
-    el.download.style.display = on ? "" : "none";
   }
   function setStatus(msg, kind) { el.status.textContent = msg; el.status.className = "status" + (kind ? " " + kind : ""); }
   function stripFence(t) {
