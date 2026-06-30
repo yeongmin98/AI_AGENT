@@ -135,27 +135,30 @@
     setStatus("에이전트가 수집 계획을 수립하고 다단계 리서치를 시작합니다…", "");
     setStep("plan", "done");
 
-    ["s1", "s2", "s3"].forEach(function (id) { setStep(id, "active"); });
     var allSources = [];
     var notes = { s1: "", s2: "", s3: "" };
 
-    var jobs = ["s1", "s2", "s3"].map(function (id) {
-      var userText = "현재 시각은 " + nowStr + " (Asia/Seoul) 이다.\n" + SEARCH_TASKS[id];
-      return geminiCall({
-        system: searchInstruction(SEARCH_TASKS[id]),
-        contents: [{ role: "user", parts: [{ text: userText }] }],
-        useSearch: true, maxTokens: 4096
-      }).then(function (res) {
-        notes[id] = res.text || "(수집 결과 없음)";
-        allSources = allSources.concat(res.sources || []);
-        setStep(id, "done");
-      }).catch(function (err) {
-        notes[id] = "(검색 실패: " + (err && err.message ? err.message : err) + ")";
-        setStep(id, "fail");
+    // 순차 검색 (분당 요청 버스트 완화) — 각 호출은 429 시 자동 재시도
+    var searchChain = ["s1", "s2", "s3"].reduce(function (p, id) {
+      return p.then(function () {
+        setStep(id, "active");
+        var userText = "현재 시각은 " + nowStr + " (Asia/Seoul) 이다.\n" + SEARCH_TASKS[id];
+        return geminiCall({
+          system: searchInstruction(SEARCH_TASKS[id]),
+          contents: [{ role: "user", parts: [{ text: userText }] }],
+          useSearch: true, maxTokens: 4096
+        }).then(function (res) {
+          notes[id] = res.text || "(수집 결과 없음)";
+          allSources = allSources.concat(res.sources || []);
+          setStep(id, "done");
+        }).catch(function (err) {
+          notes[id] = "(검색 실패: " + (err && err.message ? err.message : err) + ")";
+          setStep(id, "fail");
+        });
       });
-    });
+    }, Promise.resolve());
 
-    Promise.all(jobs).then(function () {
+    searchChain.then(function () {
       setStep("verify", "active");
       setStatus("수집한 뉴스를 검증·중복 제거하고 대시보드로 구조화 중…", "");
       collectedNotes =
@@ -482,8 +485,10 @@
     el.chatLog.scrollTop = el.chatLog.scrollHeight;
   }
 
-  /* ============ Gemini 호출 ============ */
-  function geminiCall(opts) {
+  /* ============ Gemini 호출 (429 자동 재시도 포함) ============ */
+  var MAX_RETRY = 3;
+  function geminiCall(opts, attempt) {
+    attempt = attempt || 0;
     var key = activeKey();
     var body = { contents: opts.contents };
     if (opts.system) body.systemInstruction = { parts: [{ text: opts.system }] };
@@ -491,20 +496,40 @@
     body.generationConfig = { temperature: 0.3, maxOutputTokens: opts.maxTokens || 8192 };
     if (opts.json) body.generationConfig.responseMimeType = "application/json";
     var url = ENDPOINT + encodeURIComponent(MODEL) + ":generateContent?key=" + encodeURIComponent(key);
+
     return fetch(url, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     }).then(function (r) {
-      return r.json().then(function (data) {
-        if (!r.ok) throw new Error((data && data.error && data.error.message) || ("HTTP " + r.status));
-        return data;
-      });
-    }).then(function (data) {
-      var cand = data && data.candidates && data.candidates[0];
+      return r.json().then(function (data) { return { ok: r.ok, status: r.status, data: data }; });
+    }).then(function (resp) {
+      if (!resp.ok) {
+        var msg = (resp.data && resp.data.error && resp.data.error.message) || ("HTTP " + resp.status);
+        if (resp.status === 429 && attempt < MAX_RETRY) {
+          var sec = parseRetryDelay(resp.data);
+          setStatus("무료 사용량(분당) 한도 도달 — " + sec + "초 후 자동 재시도합니다… (" + (attempt + 1) + "/" + MAX_RETRY + ")", "warn");
+          return wait(sec * 1000).then(function () { return geminiCall(opts, attempt + 1); });
+        }
+        throw new Error(msg);
+      }
+      var cand = resp.data && resp.data.candidates && resp.data.candidates[0];
       if (!cand) throw new Error("응답에 후보가 없습니다. (안전 필터 또는 빈 결과)");
       var parts = (cand.content && cand.content.parts) || [];
       return { text: parts.map(function (p) { return p.text || ""; }).join("").trim(), sources: extractSources(cand) };
     });
   }
+  function parseRetryDelay(data) {
+    try {
+      var det = (data && data.error && data.error.details) || [];
+      for (var i = 0; i < det.length; i++) {
+        if (det[i].retryDelay) {
+          var n = parseFloat(String(det[i].retryDelay).replace(/[^0-9.]/g, ""));
+          if (!isNaN(n)) return Math.min(45, Math.ceil(n) + 1);
+        }
+      }
+    } catch (e) {}
+    return 25;
+  }
+  function wait(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
   function extractSources(cand) {
     var out = [], gm = cand && cand.groundingMetadata;
     if (gm && gm.groundingChunks) gm.groundingChunks.forEach(function (c) {
